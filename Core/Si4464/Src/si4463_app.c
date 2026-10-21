@@ -122,10 +122,7 @@ int8_t si4463_part_info(uint16_t *part, uint8_t *rev)
 
     si446x_part_info();
 
-    /* PART 是 UU16 联合体，线上顺序是高字节在前。STM32 是小端，
-       直接读 .U16 会把字节搞反，所以按字节拼。 */
-    *part = (uint16_t)(((uint16_t)Si446xCmd.PART_INFO.PART.U8[0] << 8) |
-                       ((uint16_t)Si446xCmd.PART_INFO.PART.U8[1]));
+    *part = Si446xCmd.PART_INFO.PART.U16;
     *rev  = Si446xCmd.PART_INFO.CHIPREV;
 
     return SI4463_OK;
