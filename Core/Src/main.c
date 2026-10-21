@@ -25,6 +25,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "compiler_defs.h"
+#include "si446x_defs.h"      /* Si446xCmd 联合体在这里定义，必须在 api_lib.h 之前 */
+#include "si446x_api_lib.h"
+#include "si4463_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,6 +96,32 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
+  int8_t   r;
+  uint16_t part, chip_id;
+  uint8_t  rev, pbuild, romid;
+
+  printf("\r\n=== Si4463 ID ===\r\n");
+
+  /* ① 先初始化：SDN 复位 + 下发 radio_config.h 的配置 */
+  r = si4463_init();
+  printf("init = %d\r\n", r);
+  if (r != SI4463_OK)
+  {
+      printf("初始化失败（-2 = CTS 超时，查 SPI/SDN）\r\n");
+      for (;;) { HAL_Delay(1000); }
+  }
+
+  /* ② 读 PART_INFO */
+  si4463_part_info(&part, &rev);
+
+  /* ③ 其余字段在 Si446xCmd 联合体里，16 位字段同样按字节拼 */
+  chip_id = (uint16_t)(((uint16_t)Si446xCmd.PART_INFO.ID.U8[0] << 8) |
+                        (uint16_t)Si446xCmd.PART_INFO.ID.U8[1]);
+  pbuild  = Si446xCmd.PART_INFO.PBUILD;
+  romid   = Si446xCmd.PART_INFO.ROMID;
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,9 +129,15 @@ int main(void)
   while (1)
   {
 
+	 printf("PART    = 0x%04X   <- 必须是 0x4463\r\n", part);
+	  printf("CHIPREV = 0x%02X\r\n", rev);
+	    printf("PBUILD  = 0x%02X\r\n", pbuild);
+	    printf("ID      = 0x%04X\r\n", chip_id);
+	    printf("ROMID   = 0x%02X\r\n", romid);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_Delay(3000);
   }
   /* USER CODE END 3 */
 }
